@@ -14,7 +14,12 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.ticketmanagementsystem.Adapters.OrdersAdapter;
+import com.example.ticketmanagementsystem.Models.DTOs.EventsDTO;
+import com.example.ticketmanagementsystem.Models.DTOs.OrdersDTO;
+import com.example.ticketmanagementsystem.Models.Events;
 import com.example.ticketmanagementsystem.Models.Orders;
+import com.example.ticketmanagementsystem.Service.IEventService;
+import com.example.ticketmanagementsystem.Service.IOrderService;
 import com.google.android.material.navigation.NavigationView;
 
 import java.math.BigDecimal;
@@ -22,6 +27,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import retrofit2.Call;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class OrdersActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     ActionBarDrawerToggle toggle;
@@ -30,6 +41,7 @@ public class OrdersActivity extends AppCompatActivity implements NavigationView.
     RecyclerView.LayoutManager layoutManager;
     RecyclerView recyclerView;
     private List<Orders> ordersList;
+    IOrderService orderService;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -51,8 +63,25 @@ public class OrdersActivity extends AppCompatActivity implements NavigationView.
         navigationView = (NavigationView) findViewById(R.id.navView);
         navigationView.setNavigationItemSelectedListener(this);
 
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://10.0.2.2:80")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        orderService = retrofit.create(IOrderService.class);
+
         ordersList = new ArrayList<>();
-        populateOrdersListHardcoded(ordersList);
+        Call<List<OrdersDTO>> call = orderService.fetchAllOrders();
+        try{
+            Response<List<OrdersDTO>> response = call.execute();
+            List<OrdersDTO> ordersDTOS = response.body();
+            ordersList = ordersDTOS.stream()
+                    .map(o -> new Orders(o.getCustomerName(), o.getTicketCategoryDescription(), o.getOrderedAt(), o.getNumberOfTickets(), o.getTotalPrice()))
+                    .collect(Collectors.toList());
+        }
+        catch(Exception ex){
+            ex.printStackTrace();
+        }
+        //populateOrdersListHardcoded(ordersList);
         OrdersAdapter ordersAdapter = new OrdersAdapter(ordersList, this);
         recyclerView.setAdapter(ordersAdapter);
     }

@@ -3,6 +3,7 @@ package com.example.ticketmanagementsystem;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
@@ -17,11 +18,19 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.ticketmanagementsystem.Adapters.EventAdapter;
+import com.example.ticketmanagementsystem.Models.DTOs.EventsDTO;
 import com.example.ticketmanagementsystem.Models.Events;
+import com.example.ticketmanagementsystem.Service.IEventService;
 import com.google.android.material.navigation.NavigationView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import retrofit2.Call;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     ActionBarDrawerToggle toggle;
@@ -30,10 +39,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     RecyclerView.LayoutManager layoutManager;
     RecyclerView recyclerView;
 
+    IEventService eventService;
     private List<Events> eventsList;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_layout);
         drawerLayout = (DrawerLayout) findViewById(R.id.drawerLayout);
@@ -52,8 +64,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         navigationView = (NavigationView) findViewById(R.id.navView);
         navigationView.setNavigationItemSelectedListener(this);
 
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://10.0.2.2:80")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        eventService = retrofit.create(IEventService.class);
+
         eventsList = new ArrayList<>();
-        this.populateEventsListHardcoded();
+        Call<List<EventsDTO>> call = eventService.fetchAllEvents();
+        try{
+            Response<List<EventsDTO>> response = call.execute();
+            List<EventsDTO> eventsDTOS = response.body();
+            eventsList = eventsDTOS.stream()
+                    .map(e -> new Events(R.drawable.gigachad, e.getEventDescription(), "", 0))
+                    .collect(Collectors.toList());
+        }
+        catch(Exception ex){
+            ex.printStackTrace();
+        }
+
+        //this.populateEventsListHardcoded();
         EventAdapter eventAdapter = new EventAdapter(eventsList, this);
         recyclerView.setAdapter(eventAdapter);
     }
