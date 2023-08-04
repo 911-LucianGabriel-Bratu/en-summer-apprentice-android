@@ -1,0 +1,10 @@
+<resources>
+    <string-array name="ticket_categories">
+        <item>Standard</item>
+        <item>VIP</item>
+    </string-array>
+    <string name="app_name">TicketManagementSystem</string>
+    <string name="open">Open</string>
+    <string name="close">Close</string>
+
+</resources>
