@@ -15,19 +15,43 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.ticketmanagementsystem.Models.DTOs.EventsDTO;
+import com.example.ticketmanagementsystem.Models.DTOs.OrdersPostDTO;
 import com.example.ticketmanagementsystem.Models.Events;
 import com.example.ticketmanagementsystem.R;
+import com.example.ticketmanagementsystem.Service.IEventService;
+import com.example.ticketmanagementsystem.Service.IOrderService;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import retrofit2.Call;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHolder>{
     private List<Events> eventList;
 
+    private List<EventsDTO> eventsDTOS;
+
     private Context context;
 
-    public EventAdapter(List<Events> eventList, Context context) {
+    private IOrderService orderService;
+
+    private IEventService eventService;
+
+    public EventAdapter(List<Events> eventList, List<EventsDTO> eventsDTOS, Context context) {
         this.eventList = eventList;
         this.context = context;
+        this.eventsDTOS = eventsDTOS;
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://10.0.2.2:80")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        orderService = retrofit.create(IOrderService.class);
+        eventService = retrofit.create(IEventService.class);
     }
 
     @NonNull
@@ -41,6 +65,7 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
     @Override
     public void onBindViewHolder(@NonNull EventViewHolder holder, int position) {
         Events event = eventList.get(position);
+        EventsDTO eventsDTO = eventsDTOS.get(position);
 
         holder.eventImageView.setImageResource(event.getImageResourceID());
         holder.descriptionTextView.setText(event.getDescription());
@@ -53,7 +78,28 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
         holder.checkoutButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view){
+                long eventID = eventsDTO.getEventID();
+                Spinner spinner = holder.ticketCategorySpinner;
+                String ticketType = spinner.getSelectedItem().toString();
+                Call<Long> call = eventService.fetchTicketCategoryID(eventID, ticketType);
+                try{
+                    Response<Long> response = call.execute();
+                    Long ticketID = response.body();
+                    EditText editText = (EditText) holder.numberOfTicketsEditText;
+                    String contents = editText.getText().toString();
 
+                    OrdersPostDTO ordersPostDTO = new OrdersPostDTO(eventID, ticketID, Integer.parseInt(contents));
+                    Call<Object> objectCall = orderService.placeOrder(1L, ordersPostDTO);
+                    try{
+                        Response<Object> objectResponse = objectCall.execute();
+                    }
+                    catch (Exception ex1){
+                        ex1.printStackTrace();
+                    }
+                }
+                catch(Exception ex){
+                    ex.printStackTrace();
+                }
             }
         });
     }

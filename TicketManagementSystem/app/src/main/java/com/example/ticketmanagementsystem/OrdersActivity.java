@@ -77,13 +77,14 @@ public class OrdersActivity extends AppCompatActivity implements NavigationView.
             ordersList = ordersDTOS.stream()
                     .map(o -> new Orders(o.getCustomerName(), o.getTicketCategoryDescription(), o.getOrderedAt(), o.getNumberOfTickets(), o.getTotalPrice()))
                     .collect(Collectors.toList());
+            OrdersAdapter ordersAdapter = new OrdersAdapter(ordersList, ordersDTOS, this);
+            recyclerView.setAdapter(ordersAdapter);
         }
         catch(Exception ex){
             ex.printStackTrace();
         }
         //populateOrdersListHardcoded(ordersList);
-        OrdersAdapter ordersAdapter = new OrdersAdapter(ordersList, this);
-        recyclerView.setAdapter(ordersAdapter);
+
     }
 
     @Override

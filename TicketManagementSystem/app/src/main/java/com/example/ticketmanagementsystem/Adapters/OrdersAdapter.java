@@ -12,20 +12,38 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.ticketmanagementsystem.Models.DTOs.OrdersDTO;
 import com.example.ticketmanagementsystem.Models.Orders;
 import com.example.ticketmanagementsystem.R;
+import com.example.ticketmanagementsystem.Service.IOrderService;
 
 import java.util.List;
 import java.util.Objects;
 
+import retrofit2.Call;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
 public class OrdersAdapter extends RecyclerView.Adapter<OrdersAdapter.OrdersViewHolder>{
     private List<Orders> ordersList;
 
+    private List<OrdersDTO> ordersDTOS;
+
     private Context context;
 
-    public OrdersAdapter(List<Orders> ordersList, Context context) {
+    IOrderService orderService;
+
+    public OrdersAdapter(List<Orders> ordersList, List<OrdersDTO> ordersDTOS, Context context) {
         this.ordersList = ordersList;
+        this.ordersDTOS = ordersDTOS;
         this.context = context;
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://10.0.2.2:80")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        orderService = retrofit.create(IOrderService.class);
     }
 
     @NonNull
@@ -39,6 +57,7 @@ public class OrdersAdapter extends RecyclerView.Adapter<OrdersAdapter.OrdersView
     @Override
     public void onBindViewHolder(@NonNull OrdersViewHolder holder, int position) {
         Orders orders = ordersList.get(position);
+        OrdersDTO ordersDTO = ordersDTOS.get(position);
 
         holder.customerNameTextView.setText(orders.getCustomerName());
 
@@ -60,14 +79,30 @@ public class OrdersAdapter extends RecyclerView.Adapter<OrdersAdapter.OrdersView
         holder.updateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view){
-
+                int numberOfTickets = Integer.parseInt(holder.numberOfTicketsEditText.getText().toString());
+                Spinner spinner = holder.ticketCategorySpinner;
+                String ticketType = spinner.getSelectedItem().toString();
+                Call<Object> call = orderService.updateOrder(ordersDTO.getOrderID(), ticketType, numberOfTickets);
+                try{
+                    Response<Object> response = call.execute();
+                }
+                catch (Exception ex){
+                    ex.printStackTrace();
+                }
             }
         });
 
         holder.deleteButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                long orderID = ordersDTO.getOrderID();
+                Call<Object> call = orderService.cancelOrder(orderID);
+                try{
+                    Response<Object> response = call.execute();
+                }
+                catch (Exception ex){
+                    ex.printStackTrace();
+                }
             }
         });
     }

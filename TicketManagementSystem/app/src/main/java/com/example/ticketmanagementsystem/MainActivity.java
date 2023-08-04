@@ -78,14 +78,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             eventsList = eventsDTOS.stream()
                     .map(e -> new Events(R.drawable.lowbudget, e.getEventDescription(), "", 0))
                     .collect(Collectors.toList());
+
+            EventAdapter eventAdapter = new EventAdapter(eventsList, eventsDTOS, this);
+            recyclerView.setAdapter(eventAdapter);
         }
         catch(Exception ex){
             ex.printStackTrace();
         }
 
-        //this.populateEventsListHardcoded();
-        EventAdapter eventAdapter = new EventAdapter(eventsList, this);
-        recyclerView.setAdapter(eventAdapter);
     }
 
     @Override
@@ -108,20 +108,5 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return true;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    private void populateEventsListHardcoded(){
-        Events events1 = new Events(R.drawable.gigachad, "Some Description1", "VIP", 0);
-        this.eventsList.add(events1);
-        Events events2 = new Events(R.drawable.gigachad, "Some Description2", "Standard", 0);
-        this.eventsList.add(events2);
-        Events events3 = new Events(R.drawable.gigachad, "Some Description3", "VIP", 0);
-        this.eventsList.add(events3);
-        Events events4 = new Events(R.drawable.gigachad, "Some Description4", "Standard", 0);
-        this.eventsList.add(events4);
-        Events events5 = new Events(R.drawable.gigachad, "Some Description5", "Standard", 0);
-        this.eventsList.add(events5);
-        Events events6 = new Events(R.drawable.gigachad, "Some Description6", "Standard", 0);
-        this.eventsList.add(events6);
     }
 }

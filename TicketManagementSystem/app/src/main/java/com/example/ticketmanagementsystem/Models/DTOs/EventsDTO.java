@@ -4,7 +4,6 @@ public class EventsDTO {
     private long eventID;
     private String eventName;
     private String eventDescription;
-
     private String eventType;
     private String venue;
 
