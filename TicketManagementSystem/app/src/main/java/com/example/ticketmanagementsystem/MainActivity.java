@@ -76,7 +76,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Response<List<EventsDTO>> response = call.execute();
             List<EventsDTO> eventsDTOS = response.body();
             eventsList = eventsDTOS.stream()
-                    .map(e -> new Events(R.drawable.gigachad, e.getEventDescription(), "", 0))
+                    .map(e -> new Events(R.drawable.lowbudget, e.getEventDescription(), "", 0))
                     .collect(Collectors.toList());
         }
         catch(Exception ex){
